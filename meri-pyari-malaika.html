@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meri Pyari Malaika</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --cream:#FFF7F0;
+    --blush:#FFE1E8;
+    --blush-2:#FFD3DE;
+    --rose:#E8607A;
+    --rose-dark:#C6415C;
+    --cocoa:#9C6B45;
+    --cocoa-light:#C99566;
+    --cocoa-dark:#6B4226;
+    --caramel:#E8B57E;
+    --gold:#F0B94D;
+    --ink:#4A3428;
+    --paper:#FFFBF6;
+    --shadow: 0 18px 40px -14px rgba(107,66,38,0.35);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Quicksand', sans-serif;
+    color:var(--ink);
+    background:var(--cream);
+    overflow:hidden; /* re-enabled once main content unlocks */
+  }
+  body.scroll-unlocked{ overflow:auto; }
+
+  h1,h2,h3,.display{ font-family:'Baloo 2', cursive; }
+
+  button{ font-family:inherit; cursor:pointer; border:none; }
+  button:focus-visible, input:focus-visible{
+    outline: 3px solid var(--rose-dark);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+
+  /* ============ STAGES (fullscreen overlays) ============ */
+  .stage{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column;
+    z-index:50;
+    opacity:0; pointer-events:none;
+    transition: opacity .6s ease;
+    overflow:hidden;
+  }
+  .stage.active{ opacity:1; pointer-events:auto; }
+  .stage.leaving{ opacity:0; }
+
+  /* ---------- Lock stage ---------- */
+  #stage-lock{
+    background: radial-gradient(120% 120% at 50% 0%, var(--blush) 0%, var(--cream) 60%, #FFF3E8 100%);
+  }
+  .clutter-layer{
+    position:absolute; inset:0; pointer-events:none; overflow:hidden;
+  }
+  .clutter-item{
+    position:absolute;
+    font-family:'Baloo 2', cursive;
+    color:var(--rose-dark);
+    white-space:nowrap;
+    user-select:none;
+    animation: drift 9s ease-in-out infinite;
+    letter-spacing:1px;
+  }
+  .clutter-heart{
+    position:absolute;
+    color:var(--rose);
+    user-select:none;
+    animation: drift 8s ease-in-out infinite;
+  }
+  @keyframes drift{
+    0%,100%{ transform: translateY(0px) rotate(var(--r,0deg)); }
+    50%{ transform: translateY(-14px) rotate(var(--r,0deg)); }
+  }
+
+  .lock-panel{
+    position:relative;
+    z-index:2;
+    display:flex; flex-direction:column; align-items:center;
+    gap:14px;
+    padding: 28px 20px;
+    max-width: 420px;
+    width:90%;
+    text-align:center;
+    animation: popIn .7s cubic-bezier(.2,1.4,.4,1);
+  }
+  @keyframes popIn{
+    0%{ transform: scale(.6) translateY(30px); opacity:0; }
+    100%{ transform: scale(1) translateY(0); opacity:1; }
+  }
+
+  .bear-wrap{ width: 220px; }
+  .bear-wrap svg{ width:100%; height:auto; display:block; overflow:visible; }
+
+  .speech-bubble{
+    position:relative;
+    background:var(--paper);
+    border-radius: 22px;
+    padding: 12px 18px;
+    box-shadow: var(--shadow);
+    font-weight:600;
+    font-size: 0.98rem;
+    color:var(--cocoa-dark);
+    max-width: 320px;
+  }
+  .speech-bubble::after{
+    content:"";
+    position:absolute;
+    bottom:-10px; left:50%; transform:translateX(-50%);
+    border-width: 10px 8px 0 8px;
+    border-style: solid;
+    border-color: var(--paper) transparent transparent transparent;
+  }
+
+  .hint-text{
+    font-size: 0.85rem;
+    color: var(--cocoa);
+    opacity: .8;
+  }
+
+  .password-form{
+    display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+    margin-top: 6px;
+  }
+  #password-input{
+    font-family:'Quicksand', sans-serif;
+    font-size: 1rem;
+    padding: 12px 16px;
+    border-radius: 999px;
+    border: 2px solid var(--blush-2);
+    background: var(--paper);
+    color: var(--ink);
+    min-width: 220px;
+    text-align:center;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  #password-input:focus{ border-color: var(--rose); }
+  #password-input.shake{ animation: shake .45s; border-color: var(--rose-dark); }
+  @keyframes shake{
+    10%,90%{ transform: translateX(-2px); }
+    20%,80%{ transform: translateX(4px); }
+    30%,50%,70%{ transform: translateX(-8px); }
+    40%,60%{ transform: translateX(8px); }
+  }
+
+  #unlock-btn{
+    font-weight:700;
+    font-size: 0.95rem;
+    padding: 12px 22px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--rose), var(--rose-dark));
+    color: #fff;
+    box-shadow: 0 10px 20px -8px rgba(198,65,92,0.55);
+    transition: transform .15s ease;
+  }
+  #unlock-btn:hover{ transform: translateY(-2px); }
+  #unlock-btn:active{ transform: translateY(0); }
+
+  .error-msg{
+    font-size:0.8rem;
+    color: var(--rose-dark);
+    height: 1em;
+    font-weight:600;
+  }
+
+  /* ---------- Celebrate stage ---------- */
+  #stage-celebrate{
+    background: radial-gradient(120% 120% at 50% 20%, var(--blush-2) 0%, var(--blush) 55%, var(--cream) 100%);
+  }
+  .celebrate-title{
+    font-size: clamp(2.2rem, 9vw, 4rem);
+    color: var(--rose-dark);
+    text-shadow: 0 4px 0 rgba(255,255,255,0.6);
+    text-align:center;
+    animation: burstIn 0.9s cubic-bezier(.2,1.6,.3,1);
+    padding: 0 12px;
+  }
+  @keyframes burstIn{
+    0%{ transform: scale(0.2) rotate(-8deg); opacity:0; }
+    60%{ transform: scale(1.15) rotate(2deg); opacity:1; }
+    100%{ transform: scale(1) rotate(0deg); }
+  }
+  .celebrate-sub{
+    font-size: 1rem;
+    color: var(--cocoa-dark);
+    font-weight:600;
+    margin-top: 6px;
+  }
+  .confetti-piece, .burst-heart{
+    position:absolute;
+    top:-5%;
+    pointer-events:none;
+    will-change: transform;
+  }
+  .confetti-piece{ animation: confettiFall linear forwards; }
+  @keyframes confettiFall{
+    0%{ transform: translateY(-10vh) rotate(0deg); opacity:1; }
+    100%{ transform: translateY(110vh) rotate(540deg); opacity:0.9; }
+  }
+  .burst-heart{ animation: heartRise ease-out forwards; }
+  @keyframes heartRise{
+    0%{ transform: translateY(0) scale(0.4); opacity:0; }
+    15%{ opacity:1; }
+    100%{ transform: translateY(-70vh) scale(1.1); opacity:0; }
+  }
+
+  /* ---------- Donkey stage ---------- */
+  #stage-donkey{
+    background: radial-gradient(120% 120% at 50% 10%, #FFF0DC 0%, var(--cream) 60%);
+  }
+  .donkey-panel{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    animation: popIn .6s cubic-bezier(.2,1.4,.4,1);
+  }
+  .donkey-wrap{ width: 230px; }
+  .donkey-wrap svg{ width:100%; height:auto; display:block; overflow:visible; }
+  .arrow-label{
+    display:flex; align-items:center; gap:8px;
+    font-size: clamp(1.6rem, 6vw, 2.4rem);
+    color: var(--rose-dark);
+    font-weight:800;
+  }
+  .arrow-label svg{ width:60px; height:auto; transform: rotate(20deg); }
+  #continue-btn{
+    margin-top: 22px;
+    font-weight:700;
+    font-size: 0.95rem;
+    padding: 12px 26px;
+    border-radius: 999px;
+    background: var(--cocoa-dark);
+    color:#fff;
+    box-shadow: var(--shadow);
+    transition: transform .15s ease;
+  }
+  #continue-btn:hover{ transform: translateY(-2px); }
+
+  /* ============ MAIN CONTENT ============ */
+  #main-content{
+    display:none;
+    position:relative;
+    z-index:1;
+    background: var(--cream);
+  }
+  #main-content.visible{ display:block; animation: fadeIn .8s ease; }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+
+  section{
+    padding: 90px 20px;
+    display:flex; flex-direction:column; align-items:center;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* Notes section */
+  #notes-section{
+    background: linear-gradient(180deg, var(--cream), var(--blush) 100%);
+    min-height: 70vh;
+  }
+  .notes-title{ font-size: clamp(1.8rem,5vw,2.6rem); color:var(--rose-dark); margin-bottom: 40px; }
+  .notes-field{
+    position:relative;
+    width:100%;
+    max-width: 900px;
+    height: 420px;
+  }
+  .note-bubble{
+    position:absolute;
+    background: var(--paper);
+    border-radius: 18px;
+    padding: 14px 18px;
+    font-weight:600;
+    color: var(--cocoa-dark);
+    box-shadow: var(--shadow);
+    max-width: 190px;
+    font-size: 0.95rem;
+    animation: bob 5s ease-in-out infinite;
+  }
+  .note-bubble::after{
+    content:"";
+    position:absolute; bottom:-9px; left:26px;
+    border-width: 9px 7px 0 7px;
+    border-style:solid;
+    border-color: var(--paper) transparent transparent transparent;
+  }
+  @keyframes bob{
+    0%,100%{ transform: translateY(0) rotate(var(--rot,0deg)); }
+    50%{ transform: translateY(-12px) rotate(var(--rot,0deg)); }
+  }
+
+  /* Bouquet section */
+  #bouquet-section{
+    background: radial-gradient(120% 100% at 50% 0%, var(--blush-2), var(--cream) 70%);
+  }
+  .bouquet-title{ font-size: clamp(1.8rem,5vw,2.6rem); color:var(--rose-dark); margin-bottom: 10px; }
+  .bouquet-sub{ color:var(--cocoa); font-weight:600; margin-bottom: 30px; max-width:480px; }
+  .bear-bouquet-wrap{ width: 260px; }
+  .bear-bouquet-wrap svg{ width:100%; height:auto; overflow:visible; }
+
+  /* Reasons section */
+  #reasons-section{ background: var(--cream); }
+  .reasons-title{ font-size: clamp(1.8rem,5vw,2.6rem); color:var(--rose-dark); margin-bottom: 30px; }
+  .reasons-list{
+    list-style:none; padding:0; margin:0;
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+    gap:16px; max-width: 800px; width:100%; text-align:left;
+  }
+  .reasons-list li{
+    background: var(--paper);
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    font-weight:600;
+    color: var(--cocoa-dark);
+    display:flex; gap:10px; align-items:flex-start;
+  }
+  .reasons-list li span.heart-bullet{ color: var(--rose); font-size:1.1rem; flex-shrink:0; }
+  .reasons-hint{
+    margin-top:18px; font-size:0.8rem; color:var(--cocoa); opacity:.75; max-width:480px;
+  }
+
+  /* Closing section */
+  #closing-section{
+    background: linear-gradient(180deg, var(--cream), var(--blush-2));
+    min-height: 70vh;
+  }
+  .closing-title{ font-size: clamp(2rem,6vw,3rem); color: var(--rose-dark); }
+  .bear-happy-wrap{ width:220px; margin-top: 14px; }
+  .bear-happy-wrap svg{ width:100%; height:auto; overflow:visible; }
+  .closing-msg{
+    max-width: 480px;
+    font-weight:600;
+    color: var(--cocoa-dark);
+    margin-top: 16px;
+    font-size: 1.05rem;
+  }
+  .closing-signoff{
+    margin-top: 26px;
+    font-family:'Baloo 2', cursive;
+    font-size: 1.4rem;
+    color: var(--rose);
+  }
+
+  /* Shared decorative floating hearts across sections */
+  .bg-heart{
+    position:absolute;
+    color: var(--rose);
+    opacity:.18;
+    pointer-events:none;
+    animation: drift 7s ease-in-out infinite;
+  }
+
+  /* ---------- Bear component: state-driven prop/arm visibility ---------- */
+  .bear-eyes{ transform-box: fill-box; transform-origin: center; animation: blink 5.5s infinite; }
+  .bear-eyes.blink-b{ animation-delay: 0.6s; }
+  @keyframes blink{
+    0%, 92%, 100% { transform: scaleY(1); }
+    95% { transform: scaleY(0.08); }
+  }
+  svg[data-state] .prop-lock,
+  svg[data-state] .prop-bouquet,
+  svg[data-state] .arms-happy,
+  svg[data-state] .mouth-happy,
+  svg[data-state] .sparkle{ display:none; }
+  svg[data-state="lock"] .prop-lock{ display:block; }
+  svg[data-state="lock"] .arms-neutral{ display:none; }
+  svg[data-state="bouquet"] .prop-bouquet{ display:block; }
+  svg[data-state="bouquet"] .arms-neutral{ display:none; }
+  svg[data-state="happy"] .arms-happy{ display:block; }
+  svg[data-state="happy"] .arms-neutral{ display:none; }
+  svg[data-state="happy"] .mouth-happy{ display:block; }
+  svg[data-state="happy"] .mouth-neutral{ display:none; }
+  svg[data-state="happy"] .sparkle{ display:block; }
+
+  .lock-shackle{ transform-box: fill-box; transform-origin: 50% 100%; transition: transform .5s ease; }
+  #stage-lock.unlocking .lock-shackle{ transform: rotate(-35deg) translateX(-4px); }
+
+</style>
+</head>
+<body>
+
+<!-- ============ STAGE 1 : LOCK SCREEN ============ -->
+<div id="stage-lock" class="stage active">
+  <div class="clutter-layer" id="clutter-layer"></div>
+
+  <div class="lock-panel">
+    <div class="bear-wrap" id="bear-lock-slot"></div>
+
+    <div class="speech-bubble" id="bear-speech">
+      <!-- EDIT ME: replace with your own roman-Urdu line from the bear -->
+      Ek raaz hai jo sirf tumhare liye chupaya gaya hai...
+    </div>
+
+    <p class="hint-text">psst — look closely at everything floating behind me 👀 her name is hiding among the hearts.</p>
+
+    <form class="password-form" id="password-form" autocomplete="off">
+      <input type="text" id="password-input" placeholder="type the password..." aria-label="Password">
+      <button type="submit" id="unlock-btn">Unlock 🔓</button>
+    </form>
+    <div class="error-msg" id="error-msg"></div>
+  </div>
+</div>
+
+<!-- ============ STAGE 2 : CELEBRATION ============ -->
+<div id="stage-celebrate" class="stage" id="stage-celebrate">
+  <div id="confetti-layer" class="clutter-layer"></div>
+  <h1 class="celebrate-title">Meri Pyari Malaika 💗</h1>
+  <p class="celebrate-sub">you found it. of course you did.</p>
+</div>
+
+<!-- ============ STAGE 3 : DONKEY REVEAL ============ -->
+<div id="stage-donkey" class="stage">
+  <div class="donkey-panel">
+    <div class="arrow-label">
+      <svg viewBox="0 0 100 60" aria-hidden="true">
+        <path d="M2,30 C40,10 60,50 96,28" fill="none" stroke="#C6415C" stroke-width="6" stroke-linecap="round"/>
+        <path d="M78,14 L98,28 L76,42" fill="none" stroke="#C6415C" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>YOU ;D</span>
+    </div>
+    <div class="donkey-wrap" id="donkey-slot"></div>
+    <button id="continue-btn">keep going →</button>
+  </div>
+</div>
+
+<!-- ============ MAIN SCROLLABLE CONTENT ============ -->
+<main id="main-content">
+
+  <section id="notes-section">
+    <h2 class="notes-title">little things I keep thinking</h2>
+    <div class="notes-field" id="notes-field"></div>
+  </section>
+
+  <section id="bouquet-section">
+    <h2 class="bouquet-title">a bouquet, just because</h2>
+    <p class="bouquet-sub">no real flowers wilt fast enough to match how often I think about you, so here's one that won't.</p>
+    <div class="bear-bouquet-wrap" id="bear-bouquet-slot"></div>
+  </section>
+
+  <section id="reasons-section">
+    <h2 class="reasons-title">a few reasons, out of many</h2>
+    <ul class="reasons-list" id="reasons-list"></ul>
+    <p class="reasons-hint"><!-- EDIT ME: swap the reasons array in the CONFIG object below with your real ones --></p>
+  </section>
+
+  <section id="closing-section">
+    <h2 class="closing-title">that's it, that's the surprise</h2>
+    <div class="bear-happy-wrap" id="bear-happy-slot"></div>
+    <p class="closing-msg" id="closing-msg"><!-- filled from CONFIG --></p>
+    <p class="closing-signoff">— with all my love</p>
+  </section>
+
+</main>
+
+<script>
+/* =========================================================
+   CONFIG — everything personal/editable lives here
+   ========================================================= */
+const CONFIG = {
+  password: "rakun mika", // matched case-insensitive, trimmed, extra spaces collapsed
+  bearSpeech: "Ek raaz hai jo sirf tumhare liye chupaya gaya hai...", // EDIT ME
+  hint: "psst — look closely at everything floating behind me 👀 her name is hiding among the hearts.",
+  celebrateLine: "Meri Pyari Malaika 💗",
+  celebrateSub: "you found it. of course you did.",
+  notes: [
+    "you make my day",
+    "i miss you",
+    "you're my favorite person",
+    "thinking of you rn",
+    "come back soon 🥺"
+  ],
+  reasons: [
+    "the way you laugh at your own jokes before finishing them",
+    "you make ordinary days feel like something",
+    "you remember the tiny things I mention once",
+    "your texts fix bad moods instantly",
+    "you're just... you. that's the whole reason.",
+    "EDIT ME — add your real reasons here"
+  ],
+  closingMessage: "This whole silly page took longer to build than it probably should have — but you're worth the extra padlocks and confetti. EDIT ME: replace with your real closing note.",
+  decoyWords: [
+    "I LOVE YOU","MY QUEEN","FOREVER","CHOTU","PARI","SWEETHEART",
+    "MERI JAAN","CUTIEPIE","HEARTBEAT","DARLING","BAERI","JAANU",
+    "SUNSHINE","MY FAVORITE","ALWAYS","MISS YOU"
+  ],
+  realPassword: "RAKUN MIKA"
+};
+
+/* =========================================================
+   BEAR COMPONENT (reusable, state-driven)
+   states: "lock" | "bouquet" | "happy"
+   ========================================================= */
+function bearSVG(state){
+  return `
+  <svg viewBox="0 0 240 300" data-state="${state}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="furGrad-${state}" cx="40%" cy="30%" r="80%">
+        <stop offset="0%" stop-color="#C99566"/>
+        <stop offset="60%" stop-color="#9C6B45"/>
+        <stop offset="100%" stop-color="#6B4226"/>
+      </radialGradient>
+      <radialGradient id="innerEar-${state}" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stop-color="#F3D2AE"/>
+        <stop offset="100%" stop-color="#E8B57E"/>
+      </radialGradient>
+      <radialGradient id="snoutGrad-${state}" cx="50%" cy="35%" r="70%">
+        <stop offset="0%" stop-color="#FFF8EE"/>
+        <stop offset="100%" stop-color="#F3D9B8"/>
+      </radialGradient>
+      <radialGradient id="cheekGrad-${state}" cx="50%" cy="50%" r="60%">
+        <stop offset="0%" stop-color="#F4879E" stop-opacity="0.65"/>
+        <stop offset="100%" stop-color="#F4879E" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="lockGrad-${state}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#F7D488"/>
+        <stop offset="100%" stop-color="#D9992E"/>
+      </linearGradient>
+      <linearGradient id="bodyGrad-${state}" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#B57F52"/>
+        <stop offset="100%" stop-color="#7A4E2D"/>
+      </linearGradient>
+    </defs>
+
+    <!-- body -->
+    <ellipse cx="120" cy="230" rx="72" ry="58" fill="url(#bodyGrad-${state})"/>
+    <ellipse cx="120" cy="222" rx="46" ry="34" fill="#F3D9B8" opacity="0.9"/>
+
+    <!-- neutral arms (default) -->
+    <g class="arms-neutral">
+      <ellipse cx="56" cy="216" rx="17" ry="34" fill="url(#furGrad-${state})" transform="rotate(18 56 216)"/>
+      <ellipse cx="184" cy="216" rx="17" ry="34" fill="url(#furGrad-${state})" transform="rotate(-18 184 216)"/>
+    </g>
+
+    <!-- happy raised arms -->
+    <g class="arms-happy">
+      <ellipse cx="58" cy="176" rx="16" ry="34" fill="url(#furGrad-${state})" transform="rotate(-40 58 176)"/>
+      <ellipse cx="182" cy="176" rx="16" ry="34" fill="url(#furGrad-${state})" transform="rotate(40 182 176)"/>
+      <g class="sparkle" stroke="#F0B94D" stroke-width="3" stroke-linecap="round">
+        <path d="M30,110 L30,124 M22,117 L38,117"/>
+        <path d="M206,140 L206,154 M198,147 L214,147"/>
+        <path d="M188,90 L188,100 M182,95 L194,95"/>
+      </g>
+    </g>
+
+    <!-- padlock held at chest -->
+    <g class="prop-lock" transform="translate(120,206)">
+      <ellipse cx="0" cy="14" rx="30" ry="30" fill="none"/>
+      <g class="lock-shackle">
+        <path d="M-12,-6 v-10 a12,12 0 0 1 24,0 v10" fill="none" stroke="#D9992E" stroke-width="7" stroke-linecap="round"/>
+      </g>
+      <rect x="-18" y="-6" width="36" height="30" rx="8" fill="url(#lockGrad-${state})" stroke="#B5761F" stroke-width="2"/>
+      <circle cx="0" cy="8" r="4" fill="#7A4E2D"/>
+      <!-- arms curving to hold lock -->
+      <ellipse cx="-34" cy="6" rx="14" ry="26" fill="url(#furGrad-${state})" transform="rotate(35 -34 6)"/>
+      <ellipse cx="34" cy="6" rx="14" ry="26" fill="url(#furGrad-${state})" transform="rotate(-35 34 6)"/>
+    </g>
+
+    <!-- bouquet held at chest -->
+    <g class="prop-bouquet" transform="translate(120,200)">
+      <!-- stems -->
+      <path d="M-4,40 L-10,4 M4,40 L10,4 M0,42 L0,2" stroke="#6B9B5E" stroke-width="4" stroke-linecap="round" fill="none"/>
+      <path d="M-14,34 q14,-10 28,0" stroke="#E8607A" stroke-width="4" fill="none" stroke-linecap="round"/>
+      <!-- leaves -->
+      <ellipse cx="-16" cy="20" rx="8" ry="4" fill="#7CAE68" transform="rotate(-30 -16 20)"/>
+      <ellipse cx="16" cy="18" rx="8" ry="4" fill="#7CAE68" transform="rotate(30 16 18)"/>
+      <!-- flowers -->
+      <g>
+        <circle cx="0" cy="-6" r="11" fill="#F4879E"/>
+        <circle cx="-16" cy="4" r="9" fill="#F7A6B8"/>
+        <circle cx="16" cy="2" r="9" fill="#E8607A"/>
+        <circle cx="-6" cy="-18" r="8" fill="#F9C2CE"/>
+        <circle cx="10" cy="-16" r="8" fill="#F4879E"/>
+        <circle cx="0" cy="-6" r="4" fill="#F0B94D"/>
+        <circle cx="-16" cy="4" r="3.5" fill="#F0B94D"/>
+        <circle cx="16" cy="2" r="3.5" fill="#F0B94D"/>
+      </g>
+      <!-- arms curving to hold bouquet -->
+      <ellipse cx="-32" cy="30" rx="14" ry="26" fill="url(#furGrad-${state})" transform="rotate(30 -32 30)"/>
+      <ellipse cx="32" cy="30" rx="14" ry="26" fill="url(#furGrad-${state})" transform="rotate(-30 32 30)"/>
+    </g>
+
+    <!-- ears -->
+    <circle cx="70" cy="46" r="24" fill="url(#furGrad-${state})"/>
+    <circle cx="170" cy="46" r="24" fill="url(#furGrad-${state})"/>
+    <circle cx="70" cy="46" r="11" fill="url(#innerEar-${state})"/>
+    <circle cx="170" cy="46" r="11" fill="url(#innerEar-${state})"/>
+
+    <!-- head -->
+    <circle cx="120" cy="96" r="62" fill="url(#furGrad-${state})"/>
+
+    <!-- cheeks -->
+    <circle cx="76" cy="112" r="16" fill="url(#cheekGrad-${state})"/>
+    <circle cx="164" cy="112" r="16" fill="url(#cheekGrad-${state})"/>
+
+    <!-- snout -->
+    <ellipse cx="120" cy="112" rx="36" ry="27" fill="url(#snoutGrad-${state})"/>
+    <ellipse cx="120" cy="98" rx="9" ry="6.5" fill="#6B4226"/>
+
+    <!-- mouths -->
+    <path class="mouth-neutral" d="M104,118 Q120,130 136,118" fill="none" stroke="#6B4226" stroke-width="3.5" stroke-linecap="round"/>
+    <path class="mouth-happy" d="M98,116 Q120,140 142,116 Q120,150 98,116 Z" fill="#7A3B3B" stroke="#6B4226" stroke-width="2"/>
+
+    <!-- eyes -->
+    <g class="bear-eyes blink-a">
+      <ellipse cx="98" cy="82" rx="6.5" ry="8.5" fill="#3A2A1F"/>
+      <circle cx="100" cy="79" r="2" fill="#fff"/>
+    </g>
+    <g class="bear-eyes blink-b">
+      <ellipse cx="142" cy="82" rx="6.5" ry="8.5" fill="#3A2A1F"/>
+      <circle cx="144" cy="79" r="2" fill="#fff"/>
+    </g>
+  </svg>`;
+}
+
+function donkeySVG(){
+  return `
+  <svg viewBox="0 0 240 260" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="donkeyGrad" cx="40%" cy="30%" r="80%">
+        <stop offset="0%" stop-color="#B9B2C4"/>
+        <stop offset="60%" stop-color="#8C859A"/>
+        <stop offset="100%" stop-color="#645D72"/>
+      </radialGradient>
+      <radialGradient id="donkeySnout" cx="50%" cy="35%" r="70%">
+        <stop offset="0%" stop-color="#F3EEF7"/>
+        <stop offset="100%" stop-color="#D8D0E2"/>
+      </radialGradient>
+    </defs>
+    <!-- body -->
+    <ellipse cx="120" cy="220" rx="70" ry="50" fill="url(#donkeyGrad)"/>
+    <!-- legs -->
+    <rect x="80" y="240" width="14" height="18" rx="6" fill="#645D72"/>
+    <rect x="146" y="240" width="14" height="18" rx="6" fill="#645D72"/>
+    <!-- tail -->
+    <path d="M190,220 q22,6 14,30" stroke="#645D72" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- ears -->
+    <ellipse cx="86" cy="46" rx="16" ry="38" fill="url(#donkeyGrad)" transform="rotate(-18 86 46)"/>
+    <ellipse cx="154" cy="46" rx="16" ry="38" fill="url(#donkeyGrad)" transform="rotate(18 154 46)"/>
+    <ellipse cx="86" cy="48" rx="7" ry="24" fill="#EFE9F2" transform="rotate(-18 86 48)"/>
+    <ellipse cx="154" cy="48" rx="7" ry="24" fill="#EFE9F2" transform="rotate(18 154 48)"/>
+    <!-- head -->
+    <circle cx="120" cy="110" r="58" fill="url(#donkeyGrad)"/>
+    <!-- mane tuft -->
+    <path d="M70,84 q10,-26 30,-30 M170,84 q-10,-26 -30,-30" stroke="#4E4759" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <!-- snout -->
+    <ellipse cx="120" cy="132" rx="34" ry="26" fill="url(#donkeySnout)"/>
+    <ellipse cx="108" cy="128" rx="4.5" ry="6" fill="#4E4759"/>
+    <ellipse cx="132" cy="128" rx="4.5" ry="6" fill="#4E4759"/>
+    <path d="M104,142 Q120,150 136,142" stroke="#4E4759" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <!-- eyes -->
+    <ellipse cx="96" cy="96" rx="6" ry="8" fill="#2E2836"/>
+    <circle cx="98" cy="93" r="2" fill="#fff"/>
+    <ellipse cx="144" cy="96" rx="6" ry="8" fill="#2E2836"/>
+    <circle cx="146" cy="93" r="2" fill="#fff"/>
+    <!-- blush -->
+    <circle cx="82" cy="118" r="10" fill="#F4879E" opacity="0.4"/>
+    <circle cx="158" cy="118" r="10" fill="#F4879E" opacity="0.4"/>
+  </svg>`;
+}
+
+/* =========================================================
+   MOUNT BEARS + DONKEY
+   ========================================================= */
+document.getElementById('bear-lock-slot').innerHTML = bearSVG('lock');
+document.getElementById('donkey-slot').innerHTML = donkeySVG();
+document.getElementById('bear-bouquet-slot').innerHTML = bearSVG('bouquet');
+document.getElementById('bear-happy-slot').innerHTML = bearSVG('happy');
+document.getElementById('bear-speech').textContent = CONFIG.bearSpeech;
+document.querySelector('.hint-text').textContent = CONFIG.hint;
+document.querySelector('.celebrate-title').textContent = CONFIG.celebrateLine;
+document.querySelector('.celebrate-sub').textContent = CONFIG.celebrateSub;
+document.getElementById('closing-msg').textContent = CONFIG.closingMessage;
+
+/* =========================================================
+   BACKGROUND CLUTTER — hearts + decoy words hiding the password
+   ========================================================= */
+(function buildClutter(){
+  const layer = document.getElementById('clutter-layer');
+  const words = [...CONFIG.decoyWords];
+  // slot the real password in twice, styled identically to decoys
+  words.splice(3, 0, CONFIG.realPassword);
+  words.splice(Math.floor(words.length * 0.7), 0, CONFIG.realPassword.toLowerCase());
+
+  words.forEach((word) => {
+    const el = document.createElement('div');
+    el.className = 'clutter-item';
+    el.textContent = word;
+    const top = Math.random() * 92;
+    const left = Math.random() * 88;
+    const size = 0.7 + Math.random() * 1.1;
+    const rot = (Math.random() * 30 - 15).toFixed(1);
+    const opacity = 0.06 + Math.random() * 0.07;
+    el.style.top = top + '%';
+    el.style.left = left + '%';
+    el.style.fontSize = size + 'rem';
+    el.style.opacity = opacity;
+    el.style.setProperty('--r', rot + 'deg');
+    el.style.animationDelay = (Math.random() * 4).toFixed(2) + 's';
+    el.style.animationDuration = (7 + Math.random() * 5).toFixed(2) + 's';
+    layer.appendChild(el);
+  });
+
+  const heartCount = 22;
+  for(let i=0;i<heartCount;i++){
+    const el = document.createElement('div');
+    el.className = 'clutter-heart';
+    el.textContent = Math.random() > 0.5 ? '♥' : '♡';
+    const top = Math.random() * 94;
+    const left = Math.random() * 92;
+    const size = 0.8 + Math.random() * 1.6;
+    const opacity = 0.08 + Math.random() * 0.14;
+    el.style.top = top + '%';
+    el.style.left = left + '%';
+    el.style.fontSize = size + 'rem';
+    el.style.opacity = opacity;
+    el.style.setProperty('--r', (Math.random()*20-10) + 'deg');
+    el.style.animationDelay = (Math.random() * 5).toFixed(2) + 's';
+    el.style.animationDuration = (6 + Math.random() * 5).toFixed(2) + 's';
+    layer.appendChild(el);
+  }
+})();
+
+/* =========================================================
+   PASSWORD CHECK + STAGE TRANSITIONS
+   ========================================================= */
+const stageLock = document.getElementById('stage-lock');
+const stageCelebrate = document.getElementById('stage-celebrate');
+const stageDonkey = document.getElementById('stage-donkey');
+const mainContent = document.getElementById('main-content');
+const form = document.getElementById('password-form');
+const input = document.getElementById('password-input');
+const errorMsg = document.getElementById('error-msg');
+
+function normalize(str){
+  return str.trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  const guess = normalize(input.value);
+  if(guess === normalize(CONFIG.password)){
+    errorMsg.textContent = '';
+    unlockSequence();
+  } else {
+    errorMsg.textContent = "not quite... keep looking 💭";
+    input.classList.remove('shake');
+    void input.offsetWidth;
+    input.classList.add('shake');
+  }
+});
+
+function unlockSequence(){
+  input.disabled = true;
+  document.getElementById('unlock-btn').disabled = true;
+  stageLock.classList.add('unlocking');
+  setTimeout(() => {
+    stageLock.classList.remove('active');
+    stageLock.classList.add('leaving');
+    stageCelebrate.classList.add('active');
+    spawnConfetti(60);
+    spawnBurstHearts(18);
+    setTimeout(goToDonkey, 2600);
+  }, 550);
+}
+
+function goToDonkey(){
+  stageCelebrate.classList.remove('active');
+  stageCelebrate.classList.add('leaving');
+  stageDonkey.classList.add('active');
+}
+
+document.getElementById('continue-btn').addEventListener('click', function(){
+  stageDonkey.classList.remove('active');
+  stageDonkey.classList.add('leaving');
+  mainContent.classList.add('visible');
+  document.body.classList.add('scroll-unlocked');
+  setTimeout(() => { mainContent.scrollIntoView({behavior:'smooth'}); }, 100);
+});
+
+function spawnConfetti(count){
+  const layer = document.getElementById('confetti-layer');
+  const colors = ['#E8607A','#F0B94D','#F7A6B8','#9C6B45','#F3D9B8'];
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    const size = 6 + Math.random()*8;
+    el.style.left = (Math.random()*100) + '%';
+    el.style.width = size + 'px';
+    el.style.height = (size*0.4) + 'px';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    el.style.animationDuration = (2.2 + Math.random()*1.8) + 's';
+    el.style.animationDelay = (Math.random()*0.6) + 's';
+    layer.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+  }
+}
+
+function spawnBurstHearts(count){
+  const layer = document.getElementById('confetti-layer');
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'burst-heart';
+    el.textContent = '♥';
+    el.style.left = (10 + Math.random()*80) + '%';
+    el.style.bottom = '0';
+    el.style.fontSize = (1 + Math.random()*1.6) + 'rem';
+    el.style.color = Math.random() > 0.5 ? '#E8607A' : '#F0B94D';
+    el.style.animationDuration = (2.6 + Math.random()*1.6) + 's';
+    el.style.animationDelay = (Math.random()*0.8) + 's';
+    layer.appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+  }
+}
+
+/* =========================================================
+   NOTES FIELD — floating message bubbles
+   ========================================================= */
+(function buildNotes(){
+  const field = document.getElementById('notes-field');
+  CONFIG.notes.forEach((msg, i) => {
+    const el = document.createElement('div');
+    el.className = 'note-bubble';
+    el.textContent = msg;
+    const col = i % 3;
+    const row = Math.floor(i / 3);
+    el.style.left = (10 + col * 30 + Math.random()*8) + '%';
+    el.style.top = (10 + row * 38 + Math.random()*10) + '%';
+    el.style.setProperty('--rot', (Math.random()*10-5) + 'deg');
+    el.style.animationDelay = (Math.random()*3).toFixed(2) + 's';
+    field.appendChild(el);
+  });
+})();
+
+/* =========================================================
+   REASONS LIST
+   ========================================================= */
+(function buildReasons(){
+  const list = document.getElementById('reasons-list');
+  CONFIG.reasons.forEach(reason => {
+    const li = document.createElement('li');
+    li.innerHTML = '<span class="heart-bullet">♥</span><span>' + reason + '</span>';
+    list.appendChild(li);
+  });
+})();
+
+/* =========================================================
+   Ambient background hearts on scroll sections
+   ========================================================= */
+(function scatterSectionHearts(){
+  document.querySelectorAll('section').forEach(section => {
+    for(let i=0;i<5;i++){
+      const el = document.createElement('div');
+      el.className = 'bg-heart';
+      el.textContent = '♥';
+      el.style.top = (Math.random()*90) + '%';
+      el.style.left = (Math.random()*90) + '%';
+      el.style.fontSize = (1 + Math.random()*2) + 'rem';
+      el.style.setProperty('--r', (Math.random()*20-10)+'deg');
+      el.style.animationDelay = (Math.random()*4).toFixed(2)+'s';
+      section.appendChild(el);
+    }
+  });
+})();
+</script>
+</body>
+</html>
